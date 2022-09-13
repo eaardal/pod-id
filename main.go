@@ -24,11 +24,11 @@ func main() {
 	podNumber := readPodNumberArg()
 	shouldCopy := readCopyArg()
 
-	home := homedir.HomeDir()
-	kubeConfig := filepath.Join(home, ".kube", "config")
-
 	var namespace string
 	namespace, appName = findNamespace(appName)
+
+	home := homedir.HomeDir()
+	kubeConfig := filepath.Join(home, ".kube", "config")
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
