@@ -17,6 +17,15 @@ This app aims to remove the list-pods-and-copy-id steps. With pod-id you can ins
 Pod-id will use your current Kubernetes context in `~/.kube/config` to read all pods and find the ones matching the
 app name you provide as first argument. It is recommended you use [kubens](https://github.com/ahmetb/kubectx) to manage your current namespace (see usage).
 
+## Install
+
+Build it:
+```shell
+go build -o podid main.go
+```
+
+Put `podid` somewhere on your PATH.
+
 ## Usage
 
 Standalone:
