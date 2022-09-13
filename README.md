@@ -72,3 +72,4 @@ Also add the "copy" parameter to also copy the pod id to your clipboard:
 podid my-app copy # Clipboard is now: my-app-123sdk-54lda5
 podid my-app 2 copy # Clipboard is now: my-app-465dsa-sd87d8
 ```
+It will still print the pod id to stdout, so you can still use it like `kubectl logs $(podid my-app copy)` and get the logs in addition to having the ID copied to your clipboard. 
