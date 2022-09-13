@@ -76,7 +76,7 @@ podid my-app 2 # my-app-465dsa-sd87d8
 
 #### Clipboard
 
-Also add the "copy" parameter to also copy the pod id to your clipboard:
+Add the "copy" parameter to also copy the pod id to your clipboard:
 ```shell
 podid my-app copy # Clipboard is now: my-app-123sdk-54lda5
 podid my-app 2 copy # Clipboard is now: my-app-465dsa-sd87d8
