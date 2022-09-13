@@ -29,6 +29,8 @@ With kubectl:
 kubectl logs $(podid my-app)
 ```
 
+App names can be partial. If you have a pod with ID `card-payment-api-123sdk-54lda5` you can use a part of the name such as `podid payment` to look it up.
+
 ### Resolving kubernetes namespace
 
 TL;DR: Use [kubens](https://github.com/ahmetb/kubectx). Pod-id will read `kubens --current` to find the current namespace.
