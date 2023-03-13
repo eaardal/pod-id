@@ -8,11 +8,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -27,10 +25,10 @@ func main() {
 	var namespace string
 	namespace, appName = findNamespace(appName)
 
-	home := homedir.HomeDir()
-	kubeConfig := filepath.Join(home, ".kube", "config")
-
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		nil,
+	).ClientConfig()
 	if err != nil {
 		log.Fatal(err)
 	}

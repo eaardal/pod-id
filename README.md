@@ -14,7 +14,7 @@ then run `kubectl logs <pod id>` to get the logs.
 
 This app aims to remove the list-pods-and-copy-id steps. With pod-id you can instead run `kubectl logs $(podid my-app)`.
 
-Pod-id will use your current Kubernetes context in `~/.kube/config` to read all pods and find the ones matching the
+Pod-id will use your current Kubernetes context referenced by environment variable `KUBECONFIG` or in `~/.kube/config` to read all pods and find the ones matching the
 app name you provide as first argument. It is recommended you use [kubens](https://github.com/ahmetb/kubectx) to manage your current namespace (see usage).
 
 ## Install
