@@ -1,6 +1,6 @@
 # Pod ID
 
-Prints the full ID of a Kubernetes pod by a partial name
+Prints the full ID of a Kubernetes pod by a partial name.
 
 ## Motivation
 
@@ -16,6 +16,7 @@ This app aims to remove the list-pods-and-copy-id steps. With pod-id you can ins
 
 Pod-id will use your current Kubernetes context referenced by environment variable `KUBECONFIG` or in `~/.kube/config` to read all pods and find the ones matching the
 app name you provide as first argument. It is recommended you use [kubens](https://github.com/ahmetb/kubectx) to manage your current namespace (see usage).
+[kubectx and kubens](https://github.com/ahmetb/kubectx) are excellent tools to use if you're working a lot with kubernetes regardless of this app.
 
 ## Install
 

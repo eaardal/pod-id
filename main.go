@@ -25,22 +25,19 @@ func main() {
 	var namespace string
 	namespace, appName = findNamespace(appName)
 
-	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		nil,
-	).ClientConfig()
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), nil).ClientConfig()
 	if err != nil {
-		log.Fatalf("failed to load k8s config: %v", err)
+		log.Fatalf("Failed to load k8s config: %v", err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("failed to initialize k8s clientset: %v", err)
+		log.Fatalf("Failed to initialize k8s clientset: %v", err)
 	}
 
 	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		log.Fatalf("failed to get list of pods: %v", err)
+		log.Fatalf("Failed to get list of pods in %s: %v", namespace, err)
 	}
 
 	var matchingPods []v1.Pod
@@ -51,12 +48,12 @@ func main() {
 	}
 
 	if len(matchingPods) == 0 {
-		fmt.Printf("Found no pods containing app name %s\n", appName)
+		printStderr("Found no pods containing app name %s", appName)
 		return
 	}
 
 	if len(matchingPods) < podNumber {
-		fmt.Printf("Out of range: Found %d pods containing app name %s but you asked for pod number %d", len(matchingPods), appName, podNumber)
+		printStderr("Out of range: Found %d pods containing app name %s but you asked for pod number %d", len(matchingPods), appName, podNumber)
 		return
 	}
 
@@ -64,7 +61,7 @@ func main() {
 
 	if shouldCopy {
 		if err := clipboard.WriteAll(matchingPods[podNumber-1].Name); err != nil {
-			log.Fatalf("failed to write to clipboard: %v", err)
+			log.Fatalf("Failed to write to clipboard: %v", err)
 		}
 	}
 }
@@ -119,16 +116,37 @@ func findNamespace(appName string) (namespace string, cleanAppName string) {
 		return
 	}
 
+	if !hasExe("kubens") {
+		log.Fatalln("Could not resolve the Kubernetes namespace to use because the first two methods of looking up the namespace didn't give any results and it appears kubens is not available on your PATH. Use one of these three methods to provide your namespace: 1) Specify the namespace along with the name to search for: <namespace>/<appName>. 2) Set the PODID_NAMESPACE environment variable. 3) Use kubens (https://github.com/ahmetb/kubectx) to set the current namespace. This is the recommended method. The namespace is resolved in the order these alternatives are listed.")
+	}
+
 	// Then check the current namespace set by kubens
 	kubensNamespace, err := exec.Command("kubens", "--current").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	namespace = strings.TrimSuffix(string(kubensNamespace), "\n")
+	if len(kubensNamespace) > 0 {
+		namespace = strings.TrimSuffix(string(kubensNamespace), "\n")
+	} else {
+		log.Fatalln("Found no namespace by invoking `kubens --current`. Ensure kubens is set up correctly.")
+	}
+
+	if len(namespace) == 0 {
+		log.Fatalln("Could not resolve the Kubernetes namespace to use. Use one of the three methods: 1) Specify the namespace along with the name to search for: <namespace>/<appName>. 2) Set the PODID_NAMESPACE environment variable. 3) Use kubens (https://github.com/ahmetb/kubectx) to set the current namespace. This is the recommended method. The namespace is resolved in the order these alternatives are listed.")
+	}
 	return
 }
 
-func printStdout(a ...interface{}) {
-	_, _ = fmt.Fprintln(os.Stdout, a...)
+func hasExe(exe string) bool {
+	path, err := exec.LookPath(exe)
+	return err == nil && len(path) > 0
+}
+
+func printStdout(format string, a ...any) {
+	_, _ = fmt.Fprintln(os.Stdout, fmt.Sprintf(format, a...))
+}
+
+func printStderr(format string, a ...any) {
+	_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf(format, a...))
 }
