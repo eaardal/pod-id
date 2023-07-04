@@ -30,17 +30,17 @@ func main() {
 		nil,
 	).ClientConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to load k8s config: %v", err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to initialize k8s clientset: %v", err)
 	}
 
 	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to get list of pods: %v", err)
 	}
 
 	var matchingPods []v1.Pod
@@ -64,7 +64,7 @@ func main() {
 
 	if shouldCopy {
 		if err := clipboard.WriteAll(matchingPods[podNumber-1].Name); err != nil {
-			log.Fatal(err)
+			log.Fatalf("failed to write to clipboard: %v", err)
 		}
 	}
 }
