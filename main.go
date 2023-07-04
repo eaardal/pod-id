@@ -27,17 +27,17 @@ func main() {
 
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), nil).ClientConfig()
 	if err != nil {
-		log.Fatalf("Failed to load k8s config: %v", err)
+		log.Fatalf("Failed to load Kubernetes config: %v", err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("Failed to initialize k8s clientset: %v", err)
+		log.Fatalf("Failed to initialize Kubernetes clientset: %v", err)
 	}
 
 	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		log.Fatalf("Failed to get list of pods in %s: %v", namespace, err)
+		log.Fatalf("Failed to list pods in namespace \"%s\": %v", namespace, err)
 	}
 
 	var matchingPods []v1.Pod
@@ -48,12 +48,12 @@ func main() {
 	}
 
 	if len(matchingPods) == 0 {
-		printStderr("Found no pods containing app name %s", appName)
+		printStderr("Found no pod name containing \"%s\"", appName)
 		return
 	}
 
 	if len(matchingPods) < podNumber {
-		printStderr("Out of range: Found %d pods containing app name %s but you asked for pod number %d", len(matchingPods), appName, podNumber)
+		printStderr("Out of range: Found %d pod name(s) containing \"%s\" but you asked for pod number %d", len(matchingPods), appName, podNumber)
 		return
 	}
 
@@ -61,14 +61,14 @@ func main() {
 
 	if shouldCopy {
 		if err := clipboard.WriteAll(matchingPods[podNumber-1].Name); err != nil {
-			log.Fatalf("Failed to write to clipboard: %v", err)
+			log.Fatalf("Failed to write the pod's ID to your clipboard: %v", err)
 		}
 	}
 }
 
 func readAppNameArg() string {
 	if len(os.Args) < 2 {
-		log.Fatal("App name is expected to be first parameter but no params were given")
+		log.Fatal("App name is expected to be first parameter but no parameters were given")
 	}
 	return os.Args[1]
 }
@@ -102,7 +102,7 @@ func findNamespace(appName string) (namespace string, cleanAppName string) {
 			cleanAppName = parts[1]
 			return
 		} else {
-			log.Fatalf("Unexpected appName format for %s. Expected either '<namespace>/<appName>' or '<appName>'", appName)
+			log.Fatalf("Unexpected appName format for \"%s\". Expected either '<namespace>/<appName>' or '<appName>'", appName)
 		}
 	}
 
