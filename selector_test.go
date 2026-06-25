@@ -54,12 +54,22 @@ func TestResolveSelector(t *testing.T) {
 			want: "k8s-app=my-service",
 		},
 		{
-			name: "errors when matched pods span multiple apps",
+			name: "set-based selector when matched pods span multiple apps",
 			pods: []v1.Pod{
 				podWithLabels("api-gateway-abc", map[string]string{"app": "api-gateway"}),
 				podWithLabels("gateway-worker-def", map[string]string{"app": "gateway-worker"}),
 			},
-			wantErr: true,
+			want: "app in (api-gateway,gateway-worker)",
+		},
+		{
+			name: "set-based selector lists values sorted and deduplicated",
+			pods: []v1.Pod{
+				podWithLabels("zebra-abc", map[string]string{"app": "zebra"}),
+				podWithLabels("alpha-def", map[string]string{"app": "alpha"}),
+				podWithLabels("mango-ghi", map[string]string{"app": "mango"}),
+				podWithLabels("alpha-jkl", map[string]string{"app": "alpha"}),
+			},
+			want: "app in (alpha,mango,zebra)",
 		},
 		{
 			name: "errors when no known label key is present on all pods",

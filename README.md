@@ -79,9 +79,29 @@ It tries these label keys in priority order and uses the first one present on
 all matching pods: `app.kubernetes.io/name`, `app`, `k8s-app`,
 `app.kubernetes.io/instance`.
 
-If your partial name matches pods from more than one app (so no single selector
-covers them all), pod-id prints an error asking you to narrow the query, rather
-than silently dropping pods.
+If your partial name matches pods from more than one app, pod-id emits a
+[set-based selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#set-based-requirement)
+covering all of them rather than dropping pods or failing:
+
+```shell
+podid -l app1 # app in (my-app1-api,other-app1-service)
+```
+
+`kubectl logs` accepts that directly, so a single partial name can stream the
+logs of every matched app at once:
+
+```shell
+kubectl logs -l "$(podid -l app1)" --prefix -f
+```
+
+You can also pass several partial names as a comma-separated list. pod-id
+matches each one, combines the matches, and derives a single selector covering
+all of them:
+
+```shell
+podid -l api-gateway,invoice # app in (orders-api-gateway,payments-invoice-api)
+podid -l gateway,invoice     # app in (orders-api-gateway,payments-invoice-api,web-gateway)
+```
 
 Combine it with [pretty-logrus](https://github.com/eaardal/pretty-logrus) to
 read and prettify the logs of every pod at once, with a per-pod colored label:

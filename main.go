@@ -41,7 +41,7 @@ func main() {
 		log.Fatalf("Failed to list pods in namespace \"%s\": %v", namespace, err)
 	}
 
-	matchingPods := filterPodsByName(pods.Items, appName)
+	matchingPods := filterPodsByNames(pods.Items, splitAppNames(appName))
 
 	if len(matchingPods) == 0 {
 		printStderr("Found no pod name containing \"%s\"", appName)
@@ -79,14 +79,43 @@ func main() {
 	}
 }
 
-func filterPodsByName(pods []v1.Pod, appName string) []v1.Pod {
+// splitAppNames splits the raw app-name argument into one or more partial
+// names. Callers may pass a comma-separated list (e.g. "api-gateway,invoice")
+// to match several apps at once; a plain name yields a single-element slice.
+// Empty parts and surrounding whitespace are discarded.
+func splitAppNames(appName string) []string {
+	var names []string
+	for _, part := range strings.Split(appName, ",") {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			names = append(names, part)
+		}
+	}
+	return names
+}
+
+// filterPodsByNames returns every pod whose name contains at least one of the
+// given partial names. Each pod appears at most once even when several partial
+// names match it, and the original listing order is preserved.
+func filterPodsByNames(pods []v1.Pod, names []string) []v1.Pod {
 	var matching []v1.Pod
 	for _, item := range pods {
-		if strings.Contains(item.Name, appName) {
+		if podNameMatchesAny(item.Name, names) {
 			matching = append(matching, item)
 		}
 	}
 	return matching
+}
+
+// podNameMatchesAny reports whether the pod name contains any of the partial
+// names as a substring.
+func podNameMatchesAny(podName string, names []string) bool {
+	for _, name := range names {
+		if strings.Contains(podName, name) {
+			return true
+		}
+	}
+	return false
 }
 
 func readAppNameArg() string {
