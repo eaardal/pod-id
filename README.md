@@ -62,6 +62,40 @@ Therefore, the most reliable and hassle-free method is using [kubens](https://gi
 
 ### Options
 
+#### Label selector (`-l`) — reading multiple pods at once
+
+`kubectl logs <pod>` only reads a single pod. To stream logs from every pod of
+an app at once you use a label selector: `kubectl logs -l <selector> --prefix`.
+
+The `-l` (or `--selector`) flag makes pod-id resolve your partial app name into
+such a selector instead of printing a single pod ID. It finds the pods matching
+the partial name and derives a label selector shared by all of them:
+
+```shell
+podid -l my-app # app=my-app
+```
+
+It tries these label keys in priority order and uses the first one present on
+all matching pods: `app.kubernetes.io/name`, `app`, `k8s-app`,
+`app.kubernetes.io/instance`.
+
+If your partial name matches pods from more than one app (so no single selector
+covers them all), pod-id prints an error asking you to narrow the query, rather
+than silently dropping pods.
+
+Combine it with [pretty-logrus](https://github.com/eaardal/pretty-logrus) to
+read and prettify the logs of every pod at once, with a per-pod colored label:
+
+```shell
+kubectl logs -l "$(podid -l my-app)" --prefix -f | plr
+```
+
+The `-l` flag also works with `copy` to put the selector on your clipboard:
+
+```shell
+podid -l my-app copy # Clipboard is now: app=my-app
+```
+
 #### Pod number
 
 If an app has multiple pods such as:

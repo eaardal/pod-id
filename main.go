@@ -21,6 +21,7 @@ func main() {
 	appName := readAppNameArg()
 	podNumber := readPodNumberArg()
 	shouldCopy := readCopyArg()
+	selectorMode := readSelectorModeArg()
 
 	var namespace string
 	namespace, appName = findNamespace(appName)
@@ -40,15 +41,27 @@ func main() {
 		log.Fatalf("Failed to list pods in namespace \"%s\": %v", namespace, err)
 	}
 
-	var matchingPods []v1.Pod
-	for _, item := range pods.Items {
-		if strings.Contains(item.Name, appName) {
-			matchingPods = append(matchingPods, item)
-		}
-	}
+	matchingPods := filterPodsByName(pods.Items, appName)
 
 	if len(matchingPods) == 0 {
 		printStderr("Found no pod name containing \"%s\"", appName)
+		return
+	}
+
+	if selectorMode {
+		selector, err := resolveSelector(matchingPods)
+		if err != nil {
+			printStderr("%v", err)
+			return
+		}
+
+		printStdout(selector)
+
+		if shouldCopy {
+			if err := clipboard.WriteAll(selector); err != nil {
+				log.Fatalf("Failed to write the selector to your clipboard: %v", err)
+			}
+		}
 		return
 	}
 
@@ -66,11 +79,40 @@ func main() {
 	}
 }
 
-func readAppNameArg() string {
-	if len(os.Args) < 2 {
-		log.Fatal("App name is expected to be first parameter but no parameters were given")
+func filterPodsByName(pods []v1.Pod, appName string) []v1.Pod {
+	var matching []v1.Pod
+	for _, item := range pods {
+		if strings.Contains(item.Name, appName) {
+			matching = append(matching, item)
+		}
 	}
-	return os.Args[1]
+	return matching
+}
+
+func readAppNameArg() string {
+	// The app name is the first positional argument: the first that isn't a flag
+	// (e.g. -l), the "copy" keyword, or a pod number.
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "-") || arg == "copy" {
+			continue
+		}
+		if _, err := strconv.Atoi(arg); err == nil {
+			continue
+		}
+		return arg
+	}
+
+	log.Fatal("App name is expected but no app name argument was given")
+	return ""
+}
+
+func readSelectorModeArg() bool {
+	for _, arg := range os.Args {
+		if arg == "-l" || arg == "--selector" {
+			return true
+		}
+	}
+	return false
 }
 
 func readPodNumberArg() int {
